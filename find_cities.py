@@ -38,8 +38,7 @@ class ObtenerCoordenadasCSV(IObtenerCoordenadas):
 
 class ObtenerCoordenadasAPI(IObtenerCoordenadas):
     def obtener_coordenadas(self, ciudad):
-        url = f'''https://nominatim.openstreetmap.org/search?q={
-            ciudad.nombre_ciudad},{ciudad.nombre_pais}&format=json'''
+        url = f'https://nominatim.openstreetmap.org/search?q={ciudad.nombre_ciudad},{ciudad.nombre_pais}&format=json'
         data = requests.get(url)
         data = data.json()
         if data:
@@ -75,25 +74,37 @@ def obtener_coordenadas(ciudad, metodo):
     return metodo.obtener_coordenadas(ciudad)
 
 
-def main():
-    ciudad1 = Ciudad("Peru", "Lima")
-    ciudad2 = Ciudad("Argentina", "Buenos Aires")
-
-    metodo_csv = ObtenerCoordenadasCSV('worldcities.csv')
-    metodo_api = ObtenerCoordenadasAPI()
-    metodo_mock = ObtenerCoordenadasMock()
-
-    metodo = metodo_api
-
+def ciudades_mas_cercanas(ciudad1, ciudad2, ciudad3, metodo):
     coord1 = obtener_coordenadas(ciudad1, metodo)
     coord2 = obtener_coordenadas(ciudad2, metodo)
+    coord3 = obtener_coordenadas(ciudad3, metodo)
 
-    if coord1 and coord2:
-        distancia = calcular_distancia_haversine(coord1, coord2)
-        print(f'''La distancia entre {ciudad1.nombre_ciudad}, {ciudad1.nombre_pais} y {
-              ciudad2.nombre_ciudad}, {ciudad2.nombre_pais} es {distancia:.2f} km.''')
+    if coord1 and coord2 and coord3:
+        dist1 = calcular_distancia_haversine(coord1, coord2)
+        dist2 = calcular_distancia_haversine(coord1, coord3)
+        dist3 = calcular_distancia_haversine(coord2, coord3)
+
+        distancias = {(ciudad1, ciudad2): dist1, (ciudad1, ciudad3): dist2, (ciudad2, ciudad3): dist3}
+        ciudades_cercanas = min(distancias, key=distancias.get)
+        return ciudades_cercanas, distancias[ciudades_cercanas]
     else:
-        print("No se pudieron obtener las coordenadas de una o ambas ciudades.")
+        return None, None
+
+
+def main():
+    ciudad1 = Ciudad("Peru", "Lima")
+    ciudad2 = Ciudad("Colombia", "Bogota")
+    ciudad3 = Ciudad("Argentina", "Buenos Aires")
+
+    metodo = ObtenerCoordenadasAPI()
+
+    ciudades_cercanas, distancia = ciudades_mas_cercanas(ciudad1, ciudad2, ciudad3, metodo)
+
+    if ciudades_cercanas:
+        ciudadA, ciudadB = ciudades_cercanas
+        print(f'Las ciudades más cercanas son {ciudadA.nombre_ciudad}, {ciudadA.nombre_pais} y {ciudadB.nombre_ciudad}, {ciudadB.nombre_pais} con una distancia de {distancia:.2f} km.')
+    else:
+        print("No se pudieron obtener las coordenadas de una o más ciudades.")
 
 
 if __name__ == "__main__":
