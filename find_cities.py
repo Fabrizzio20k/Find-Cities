@@ -1,6 +1,5 @@
 import csv
 import requests
-import json
 import math
 from abc import ABC, abstractmethod
 
@@ -35,6 +34,12 @@ class ObtenerCoordenadasCSV(IObtenerCoordenadas):
                     return Coordenada(float(row['lat']), float(row['lng']))
         return None
 
+class ObtenerCoordenadasMock(IObtenerCoordenadas):
+    def obtener_coordenadas(self, ciudad):
+        if ciudad.nombre_ciudad.lower() == "ciudadfantasma":
+            return None
+        return Coordenada(0.0, 0.0)
+
 
 class ObtenerCoordenadasAPI(IObtenerCoordenadas):
     def obtener_coordenadas(self, ciudad):
@@ -46,11 +51,6 @@ class ObtenerCoordenadasAPI(IObtenerCoordenadas):
             longitud = float(data[0]['lon'])
             return Coordenada(latitud, longitud)
         return None
-
-
-class ObtenerCoordenadasMock(IObtenerCoordenadas):
-    def obtener_coordenadas(self, ciudad):
-        return Coordenada(0.0, 0.0)
 
 
 def calcular_distancia_haversine(coord1, coord2):
@@ -79,16 +79,18 @@ def ciudades_mas_cercanas(ciudad1, ciudad2, ciudad3, metodo):
     coord2 = obtener_coordenadas(ciudad2, metodo)
     coord3 = obtener_coordenadas(ciudad3, metodo)
 
-    if coord1 and coord2 and coord3:
-        dist1 = calcular_distancia_haversine(coord1, coord2)
-        dist2 = calcular_distancia_haversine(coord1, coord3)
-        dist3 = calcular_distancia_haversine(coord2, coord3)
-
-        distancias = {(ciudad1, ciudad2): dist1, (ciudad1, ciudad3): dist2, (ciudad2, ciudad3): dist3}
-        ciudades_cercanas = min(distancias, key=distancias.get)
-        return ciudades_cercanas, distancias[ciudades_cercanas]
-    else:
+    if coord1 is None or coord2 is None or coord3 is None:
         return None, None
+
+    dist1 = calcular_distancia_haversine(coord1, coord2)
+    dist2 = calcular_distancia_haversine(coord1, coord3)
+    dist3 = calcular_distancia_haversine(coord2, coord3)
+
+    distancias = {(ciudad1, ciudad2): dist1, (ciudad1, ciudad3): dist2, (ciudad2, ciudad3): dist3}
+    ciudades_cercanas = min(distancias, key=distancias.get)
+    return ciudades_cercanas, distancias[ciudades_cercanas]
+
+
 
 
 def main():
