@@ -46,6 +46,7 @@ class ObtenerCoordenadasAPI(IObtenerCoordenadas):
         url = f'https://nominatim.openstreetmap.org/search?q={ciudad.nombre_ciudad},{ciudad.nombre_pais}&format=json'
         data = requests.get(url)
         data = data.json()
+        
         if data:
             latitud = float(data[0]['lat'])
             longitud = float(data[0]['lon'])
@@ -89,7 +90,6 @@ def ciudades_mas_cercanas(ciudad1, ciudad2, ciudad3, metodo):
     distancias = {(ciudad1, ciudad2): dist1, (ciudad1, ciudad3): dist2, (ciudad2, ciudad3): dist3}
     ciudades_cercanas = min(distancias, key=distancias.get)
     return ciudades_cercanas, distancias[ciudades_cercanas]
-
 
 
 
