@@ -1,0 +1,10 @@
+[
+  "testing.py::TestCalculoDistancias::test_ciudad_no_existe",
+  "testing.py::TestCalculoDistancias::test_ciudad_repetida",
+  "testing.py::TestCalculoDistancias::test_ciudades_mas_cercanas_exito",
+  "testing.py::TestCalculoDistancias::test_distancia_haversine",
+  "testing2.py::TestCalculoDistancias::test_ciudad_no_existe",
+  "testing2.py::TestCalculoDistancias::test_ciudad_repetida",
+  "testing2.py::TestCalculoDistancias::test_ciudades_mas_cercanas_exito",
+  "testing2.py::TestCalculoDistancias::test_distancia_haversine"
+]

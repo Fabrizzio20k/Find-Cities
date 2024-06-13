@@ -23,16 +23,21 @@ class IObtenerCoordenadas(ABC):
 
 
 class ObtenerCoordenadasCSV(IObtenerCoordenadas):
-    def __init__(self, archivo_csv):
+    def __init__(self, archivo_csv, encoding='utf-8'):
         self.archivo_csv = archivo_csv
+        self.encoding = encoding
 
     def obtener_coordenadas(self, ciudad):
-        with open(self.archivo_csv, mode='r') as file:
-            reader = csv.DictReader(file)
-            for row in reader:
-                if row['city'].lower() == ciudad.nombre_ciudad.lower() and row['country'].lower() == ciudad.nombre_pais.lower():
-                    return Coordenada(float(row['lat']), float(row['lng']))
+        try:
+            with open(self.archivo_csv, mode='r', encoding=self.encoding) as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    if row['city'].lower() == ciudad.nombre_ciudad.lower() and row['country'].lower() == ciudad.nombre_pais.lower():
+                        return Coordenada(float(row['lat']), float(row['lng']))
+        except UnicodeDecodeError as e:
+            print(f"Error al leer el archivo CSV: {e}")
         return None
+
 
 class ObtenerCoordenadasMock(IObtenerCoordenadas):
     def obtener_coordenadas(self, ciudad):
@@ -43,15 +48,19 @@ class ObtenerCoordenadasMock(IObtenerCoordenadas):
 
 class ObtenerCoordenadasAPI(IObtenerCoordenadas):
     def obtener_coordenadas(self, ciudad):
-        url = f'https://nominatim.openstreetmap.org/search?q={ciudad.nombre_ciudad},{ciudad.nombre_pais}&format=json'
-        data = requests.get(url)
-        data = data.json()
-        
-        if data:
-            latitud = float(data[0]['lat'])
-            longitud = float(data[0]['lon'])
-            return Coordenada(latitud, longitud)
-        return None
+        try:
+            url = f'https://nominatim.openstreetmap.org/search?q={ciudad.nombre_ciudad},{ciudad.nombre_pais}&format=json'
+            print(url)
+            data = requests.get(url)
+            data = data.json()
+
+            if data:
+                latitud = float(data[0]['lat'])
+                longitud = float(data[0]['lon'])
+                return Coordenada(latitud, longitud)
+        except Exception as e:
+            print(f'Error al obtener las coordenadas de {ciudad.nombre_ciudad}, {ciudad.nombre_pais}.', e)
+            return None
 
 
 def calcular_distancia_haversine(coord1, coord2):
@@ -63,8 +72,8 @@ def calcular_distancia_haversine(coord1, coord2):
     dlat = lat2 - lat1
     dlon = lon2 - lon1
 
-    a = math.sin(dlat / 2)**2 + math.cos(lat1) * \
-        math.cos(lat2) * math.sin(dlon / 2)**2
+    a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * \
+        math.cos(lat2) * math.sin(dlon / 2) ** 2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
     distancia = R * c
@@ -87,24 +96,30 @@ def ciudades_mas_cercanas(ciudad1, ciudad2, ciudad3, metodo):
     dist2 = calcular_distancia_haversine(coord1, coord3)
     dist3 = calcular_distancia_haversine(coord2, coord3)
 
-    distancias = {(ciudad1, ciudad2): dist1, (ciudad1, ciudad3): dist2, (ciudad2, ciudad3): dist3}
+    distancias = {
+        (ciudad1, ciudad2): dist1, 
+        (ciudad1, ciudad3): dist2, 
+        (ciudad2, ciudad3): dist3
+    }
     ciudades_cercanas = min(distancias, key=distancias.get)
+    
     return ciudades_cercanas, distancias[ciudades_cercanas]
-
 
 
 def main():
     ciudad1 = Ciudad("Peru", "Lima")
-    ciudad2 = Ciudad("Colombia", "Bogota")
+    ciudad2 = Ciudad("Colombia", "Bogotá")
     ciudad3 = Ciudad("Argentina", "Buenos Aires")
 
     metodo = ObtenerCoordenadasAPI()
+    # metodo = ObtenerCoordenadasCSV('worldcities.csv')
 
     ciudades_cercanas, distancia = ciudades_mas_cercanas(ciudad1, ciudad2, ciudad3, metodo)
 
     if ciudades_cercanas:
         ciudadA, ciudadB = ciudades_cercanas
-        print(f'Las ciudades más cercanas son {ciudadA.nombre_ciudad}, {ciudadA.nombre_pais} y {ciudadB.nombre_ciudad}, {ciudadB.nombre_pais} con una distancia de {distancia:.2f} km.')
+        print(
+            f'Las ciudades más cercanas son {ciudadA.nombre_ciudad}, {ciudadA.nombre_pais} y {ciudadB.nombre_ciudad}, {ciudadB.nombre_pais} con una distancia de {distancia:.2f} km.')
     else:
         print("No se pudieron obtener las coordenadas de una o más ciudades.")
 
