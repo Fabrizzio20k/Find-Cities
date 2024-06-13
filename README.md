@@ -9,6 +9,7 @@ Curso: Ingeniería de Software (CS3081)
 Esta actividad se centra en buscar las distancias entre tres ciudades de dos formas principales, consumiendo la api de [Nominatim](https://nominatim.openstreetmap.org/ui/search.html) o con el csv `worldcities.csv`. Asimismo, se realizaron test unitarios para verificar el correcto funcionamiento del código.
 
 ## Requerimientos
+Instalar las siguientes librerías con `pip`
 
 + request
 + csv
